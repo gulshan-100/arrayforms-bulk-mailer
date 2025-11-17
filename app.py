@@ -137,7 +137,7 @@ def create_email_safe_html(body):
     """
     Create email-safe HTML content with proper link handling
     """
-    # First clean the HTML with bleach
+    # First clean the HTML with bleach and remove any word-break tags
     safe_html_body = bleach.clean(
         body,
         tags=['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'span', 'div', 'b', 'i', 'font'],
@@ -157,6 +157,10 @@ def create_email_safe_html(body):
         }
     )
     
+    # Remove any word-break tags that might have been added by the rich text editor
+    safe_html_body = re.sub(r'<wbr\s*/?>', '', safe_html_body)
+    safe_html_body = re.sub(r'<\s*wbr\s*>', '', safe_html_body)
+    
     # Process links to make them email-client friendly
     safe_html_body = process_links_for_email(safe_html_body)
     
@@ -172,14 +176,15 @@ def create_email_safe_html(body):
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-            body {{ font-family: Arial, sans-serif; line-height: 1.6; }}
-            a {{ color: #0066cc; text-decoration: none; word-break: keep-all; white-space: nowrap; }}
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; }}
+            a {{ color: #0066cc; text-decoration: none; }}
             a:hover {{ text-decoration: underline; }}
-            .link-container {{ overflow-x: auto; }}
+            p {{ margin: 10px 0; }}
+            .email-content {{ max-width: 600px; }}
         </style>
     </head>
     <body>
-        <div class="link-container">
+        <div class="email-content">
             {safe_html_body}
         </div>
     </body>
